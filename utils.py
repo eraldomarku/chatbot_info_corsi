@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from wit import Wit
 
-access_token = "CADK2B6ECBIEXQ3AHBMXYCAWU32ILPA2"
+access_token = "SK7OGO5SDYGGQZG34VDWP7NVVH4IRQAO"
 
 client = Wit(access_token)
 
