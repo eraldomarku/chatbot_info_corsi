@@ -205,15 +205,18 @@ def conta_ore(res):
 def bot():
     while(True):
         user_request = input("Come posso esserti utile?:\n")
-        intent, entities = wit_response(user_request)
-        if(intent == "get_aula"):
-            intent_get_aula(entities)
-        elif(intent == "get_corso"):
-            intent_get_corso(entities)
-        elif(intent == "get_orario"):
-            intent_get_orario(entities)
-        elif(intent == "get_quante_ore"):
-            intent_get_quante_ore(entities)
+        intent, confidence, entities = wit_response(user_request)
+        if(intent == None or confidence <= 0.8):
+            print("Non ho capito")
+        else:
+            if(intent == "get_aula"):
+                intent_get_aula(entities)
+            elif(intent == "get_corso"):
+                intent_get_corso(entities)
+            elif(intent == "get_orario"):
+                intent_get_orario(entities)
+            elif(intent == "get_quante_ore"):
+                intent_get_quante_ore(entities)
 
             
 
