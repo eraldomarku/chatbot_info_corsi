@@ -10,6 +10,7 @@ def intent_get_aula(entities):
     data = None
     orario_inizio = None
     text_day = None
+    response = None
     #Controllo se nella risposta è presente una datetime e la inserisco su data. In caso negativo assegno il datetime corrente a data
     try:   
         data_string_raw = entities["wit$datetime:datetime"][0]["value"]
@@ -31,21 +32,23 @@ def intent_get_aula(entities):
         res = s.fetchall()  
         if(len(res) > 0):
             if(data.strftime("%H") == "00"):
-                print(text_day+ " hai lezione di: ")
+                response = text_day+ " hai lezione di: "
                 for i in range (0, len(res)):
-                    print(res[i][1]+" nell'aula "+res[i][0]+" alle "+str(res[i][2]))
+                    response += res[i][1]+" nell'aula "+res[i][0]+" alle "+str(res[i][2])+" "
             else:
-                print(text_day + " hai lezione di: " + res[0][1] +" nell'aula " + res[0][0] + " alle " +str(res[0][2]))      
+                response = text_day + " hai lezione di: " + res[0][1] +" nell'aula " + res[0][0] + " alle " +str(res[0][2])
+            return response         
         else:
-            print("Non ci sono lezioni")   
+            return "Non ci sono lezioni"   
     except:
-        print("Errore connessione")   
+        return "Errore connessione"   
 
 def intent_get_corso(entities):
     data = None
     orario_inizio = None
     text_day = None
     sql = None
+    response = None 
     #Controllo se nella risposta è presente una datetime e la inserisco su data. In caso negativo assegno il datetime corrente a data
     try:
         data_string_raw = entities["wit$datetime:datetime"][0]["value"]
@@ -65,21 +68,23 @@ def intent_get_corso(entities):
         res = s.fetchall()  
         if(len(res) > 0):
             if(data.strftime("%H") == "00"):
-                print(text_day+ " hai lezione di: ")
+                response = text_day+ " hai lezione di: "
                 for i in range (0, len(res)):
-                    print(res[i][0])
+                    response += res[i][0]+" "
             else:
-                print(text_day + " hai lezione di: " + res[0][0])      
+                response = text_day + " hai lezione di: " + res[0][0]
+            return response          
         else:
-            print("Non ci sono lezioni")   
+            return "Non ci sono lezioni"   
     except:
-        print("Errore connessione")
+        return "Errore connessione"
 
 
 def intent_get_orario(entities):
     data = None
     text_day = None
     clean_entities = None
+    response = None
     #Pulisco le entities dal datetime -ora- dato che wit lo rileva come datetime. ES. a che ora ho lezione domani. Inserisco la data specificata dall'utente altrimenti la data corrente
     try:
         for i in range (0, len(entities["wit$datetime:datetime"])):
@@ -104,13 +109,14 @@ def intent_get_orario(entities):
             s.execute(sql, (data.strftime("%Y-%m-%d")))
             res = s.fetchall()
             if(len(res) > 0):
-                print(text_day+ " hai lezione di: ")
+                response = text_day+ " hai lezione di: "
                 for i in range (0, len(res)):
-                    print(res[i][0]+" alle "+str(res[i][1]))           
+                    response += res[i][0]+" alle "+str(res[i][1])+" "          
             else:
-                print("Non ci sono lezioni")   
+                response = "Non ci sono lezioni"
+            return response       
         except:
-            print("Errore connessione")        
+            return "Errore connessione"        
     except:
         sql = "SELECT corso, orario_inizio from lezioni WHERE data = %s ORDER BY orario_inizio"
         #verifico se sia presente l'entità iniziare o finire altrimenti stampo tutte le lezioni in base alla data
@@ -120,11 +126,12 @@ def intent_get_orario(entities):
                 s.execute(sql, (data.strftime("%Y-%m-%d")))
                 res = s.fetchall()
                 if(len(res)>0):
-                    print(text_day + " le lezioni iniziano alle: "+str(res[0][1]))
+                    response = text_day + " le lezioni iniziano alle: "+str(res[0][1])
                 else:
-                    print("Non ci sono lezioni")    
+                    response = "Non ci sono lezioni"
+                return response        
             except:
-                print("Errore connessione")
+                return "Errore connessione"
         except:
             try:
                 entities["finire:finire"]
@@ -133,29 +140,32 @@ def intent_get_orario(entities):
                     s.execute(sql, (data.strftime("%Y-%m-%d")))
                     res = s.fetchall()
                     if(len(res)>0):
-                        print(text_day + " le lezioni finiscono alle: "+str(res[len(res)-1][1]))
+                        response = text_day + " le lezioni finiscono alle: "+str(res[len(res)-1][1])
                     else:
-                        print("Non ci sono lezioni")    
+                        response = "Non ci sono lezioni"    
+                    return response    
                 except:
-                    print("Errore connessione")
+                    return "Errore connessione"
             except:
                 try:
                     s.execute(sql, (data.strftime("%Y-%m-%d")))
                     res = s.fetchall()
                     if(len(res) > 0):
-                        print(text_day+ " hai lezione di: ")
+                        response = text_day+ " hai lezione di: "
                         for i in range (0, len(res)):
-                            print(res[i][0]+" alle "+str(res[i][1]))           
+                            response += res[i][0]+" alle "+str(res[i][1])+" "               
                     else:
-                        print("Non ci sono lezioni")
+                        response = "Non ci sono lezioni"
+                    return response    
                 except:
-                    print("Errore Connessione")        
+                   return "Errore Connessione"        
 
 def intent_get_quante_ore(entities):
     data = None
     text_day = None
     text_corso = None
     res = None
+    response = None
     #Controllo se nella risposta è presente una datetime e la inserisco su data. In caso negativo assegno il datetime corrente a data
     try:   
         data_string_raw = entities["wit$datetime:datetime"][0]["value"]
@@ -187,12 +197,13 @@ def intent_get_quante_ore(entities):
         res = s.fetchall()
     tot_ore = conta_ore(res)
     if(tot_ore == timedelta(hours=0)):
-        print("Non ci sono lezioni")
+        response = "Non ci sono lezioni"
     else:    
         if(text_corso != None):
-            print(text_day + " hai "+ str(tot_ore) + " ore di " + text_corso)
+            response = text_day + " hai "+ str(tot_ore) + " ore di " + text_corso
         else:
-            print(text_day + " hai "+ str(tot_ore) + " ore di lezione")        
+            response = text_day + " hai "+ str(tot_ore) + " ore di lezione"
+    return response          
 
 def conta_ore(res):
     tot_ore = timedelta(hours=0)
@@ -202,22 +213,19 @@ def conta_ore(res):
 
 
 
-def bot():
-    while(True):
-        user_request = input("Come posso esserti utile?:\n")
+def db_response(input):
+        user_request = input
         intent, confidence, entities = wit_response(user_request)
         if(intent == None or confidence <= 0.8):
-            print("Non ho capito")
+            return "Non ho capito"
         else:
             if(intent == "get_aula"):
-                intent_get_aula(entities)
+                return intent_get_aula(entities)
             elif(intent == "get_corso"):
-                intent_get_corso(entities)
+                return intent_get_corso(entities)
             elif(intent == "get_orario"):
-                intent_get_orario(entities)
+                return intent_get_orario(entities)
             elif(intent == "get_quante_ore"):
-                intent_get_quante_ore(entities)
+                return intent_get_quante_ore(entities)
 
             
-
-bot()
