@@ -102,21 +102,40 @@ def intent_get_orario(entities):
         text_day = "Oggi"
     #Controllo l'esistenza dell'entità corso e costruisco la query conseguente. Stessa cosa nel momento in cui non sia presente    
     try:
-        corso = "'" + entities["corso:corso"][0]["value"] +"'"
-        sql = "SELECT  corso, orario_inizio from lezioni WHERE data = %s AND corso REGEXP "+corso+" ORDER BY orario_inizio"  
-        #stampo i risulati della query          
-        try:
-            s.execute(sql, (data.strftime("%Y-%m-%d")))
-            res = s.fetchall()
-            if(len(res) > 0):
-                response = text_day+ " hai lezione di: "
-                for i in range (0, len(res)):
-                    response += res[i][0]+" alle "+str(res[i][1])+" "          
-            else:
-                response = "Non ci sono lezioni"
-            return response       
-        except:
-            return "Errore connessione"        
+        if("settimana" in text_day):
+            corso = "'" + entities["corso:corso"][0]["value"] +"'"
+            sql = "SELECT  corso, orario_inizio, data from lezioni WHERE data >= %s AND data <= %s AND corso REGEXP "+corso+" ORDER BY data,orario_inizio"  
+            #stampo i risulati della query          
+            try:
+                end_data = data + timedelta(days = 7)
+                
+                s.execute(sql, (data.strftime("%Y-%m-%d"), end_data.strftime("%Y-%m-%d")))
+                res = s.fetchall()
+                if(len(res) > 0):
+                    response = text_day+ " hai lezione di "+res[i][0]+" il: "
+                    for i in range (0, len(res)):
+                        response += str(res[i][2])+" alle "+str(res[i][1])+" "          
+                else:
+                    response = "Non ci sono lezioni"
+                return response       
+            except:
+                return "Errore connessione"
+        else:        
+            corso = "'" + entities["corso:corso"][0]["value"] +"'"
+            sql = "SELECT  corso, orario_inizio from lezioni WHERE data = %s AND corso REGEXP "+corso+" ORDER BY orario_inizio"  
+            #stampo i risulati della query          
+            try:
+                s.execute(sql, (data.strftime("%Y-%m-%d")))
+                res = s.fetchall()
+                if(len(res) > 0):
+                    response = text_day+ " hai lezione di: "
+                    for i in range (0, len(res)):
+                        response += res[i][0]+" alle "+str(res[i][1])+" "          
+                else:
+                    response = "Non ci sono lezioni"
+                return response       
+            except:
+                return "Errore connessione"        
     except:
         sql = "SELECT corso, orario_inizio from lezioni WHERE data = %s ORDER BY orario_inizio"
         #verifico se sia presente l'entità iniziare o finire altrimenti stampo tutte le lezioni in base alla data
@@ -148,17 +167,31 @@ def intent_get_orario(entities):
                     return "Errore connessione"
             except:
                 try:
-                    s.execute(sql, (data.strftime("%Y-%m-%d")))
-                    res = s.fetchall()
-                    if(len(res) > 0):
-                        response = text_day+ " hai lezione di: "
-                        for i in range (0, len(res)):
-                            response += res[i][0]+" alle "+str(res[i][1])+" "               
-                    else:
-                        response = "Non ci sono lezioni"
-                    return response    
+                    if("settimana" in text_day):
+                        sql = "SELECT corso, orario_inizio, data from lezioni WHERE data >= %s AND data <= %s ORDER BY data,orario_inizio"
+                        end_data = data + timedelta(days = 7)
+                        s.execute(sql, (data.strftime("%Y-%m-%d"), end_data.strftime("%Y-%m-%d")))
+                        res = s.fetchall()
+                        if(len(res) > 0):
+                            response = text_day+ " hai lezione di: "
+                            for i in range (0, len(res)):
+                                response += res[i][0]+" il "+str(res[i][2])+" alle "+str(res[i][1])+" "               
+                        else:
+                            response = "Non ci sono lezioni"
+                        return response
+                    else:   
+                        s.execute(sql, (data.strftime("%Y-%m-%d")))
+                        res = s.fetchall()
+                        if(len(res) > 0):
+                            response = text_day+ " hai lezione di: "
+                            for i in range (0, len(res)):
+                                response += res[i][0]+" alle "+str(res[i][1])+" "               
+                        else:
+                            response = "Non ci sono lezioni"
+                        return response    
                 except:
-                   return "Errore Connessione"        
+                    print("gfgfgf")
+                    return "Errore Connessione"        
 
 def intent_get_quante_ore(entities):
     data = None
@@ -186,6 +219,7 @@ def intent_get_quante_ore(entities):
         end_data = data + timedelta(days = 7)
         s.execute(sql, (data.strftime("%Y-%m-%d"), end_data.strftime("%Y-%m-%d")))
         res = s.fetchall()
+        print(res)
     else:
         try:
             corso = "'" + entities["corso:corso"][0]["value"] +"'"
@@ -195,6 +229,7 @@ def intent_get_quante_ore(entities):
             sql = "SELECT corso, orario_inizio, orario_fine from lezioni WHERE data = %s ORDER BY orario_inizio"
         s.execute(sql, (data.strftime("%Y-%m-%d")))
         res = s.fetchall()
+    print(res)    
     tot_ore = conta_ore(res)
     if(tot_ore == timedelta(hours=0)):
         response = "Non ci sono lezioni"
@@ -216,7 +251,7 @@ def conta_ore(res):
 def db_response(input):
         user_request = input
         intent, confidence, entities = wit_response(user_request)
-        if(intent == None or confidence <= 0.8):
+        if(intent == None or confidence <= 0.7):
             return "Non ho capito"
         else:
             if(intent == "get_aula"):
