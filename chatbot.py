@@ -23,20 +23,27 @@ def intent_get_aula(entities):
     try:
         corso = "'" + entities["corso:corso"][0]["value"] +"'"
         sql = "SELECT aula, corso, orario_inizio from lezioni WHERE orario_inizio >= %s AND data = %s AND corso REGEXP "+corso+"ORDER BY orario_inizio"
-    except:
-        sql = "SELECT aula, corso, orario_inizio from lezioni WHERE orario_inizio >= %s AND data = %s ORDER BY orario_inizio"
-    #Eseguo la query che prende orario_inizio e data. Poi controllo se l'ora del datetime == 0 e stampo tutte le lezione. In caso contrario significa che l'utente ha specificato un orario e allora stampo solo il primo risultato della query    
-    try:
         orario_inizio = data.strftime("%H:%M")
         s.execute(sql, (orario_inizio, data.strftime("%Y-%m-%d"), ))
+    except:
+        if(data.strftime("%H") == "00"):
+            sql = "SELECT aula, corso, orario_inizio from lezioni WHERE orario_inizio >= %s AND data = %s ORDER BY orario_inizio"
+            orario_inizio = data.strftime("%H:%M")
+            s.execute(sql, (orario_inizio, data.strftime("%Y-%m-%d"), ))
+        else:
+            sql = "SELECT aula, corso, orario_inizio from lezioni WHERE orario_inizio <= %s AND orario_fine > %s AND data = %s ORDER BY orario_inizio"
+            orario_inizio = data.strftime("%H:%M")
+            s.execute(sql, (orario_inizio, orario_inizio, data.strftime("%Y-%m-%d"), ))
+    #Eseguo la query che prende orario_inizio e data. Poi controllo se l'ora del datetime == 0 e stampo tutte le lezione. In caso contrario significa che l'utente ha specificato un orario e allora stampo solo il primo risultato della query    
+    try:
         res = s.fetchall()  
         if(len(res) > 0):
             if(data.strftime("%H") == "00"):
                 response = text_day+ " hai lezione di: "
                 for i in range (0, len(res)):
-                    response += res[i][1]+" nell'aula "+res[i][0]+" alle "+str(res[i][2])+" "
+                    response += res[i][1]+" nell'aula "+res[i][0]+" dalle "+str(res[i][2])+" "
             else:
-                response = text_day + " hai lezione di: " + res[0][1] +" nell'aula " + res[0][0] + " alle " +str(res[0][2])
+                response = text_day + " hai lezione di: " + res[0][1] +" nell'aula " + res[0][0] + " dalle " +str(res[0][2])+", "
             return response         
         else:
             return "Non ci sono lezioni"   
@@ -57,27 +64,50 @@ def intent_get_corso(entities):
     except:
         data = datetime.today()
         text_day = "Oggi"
-    #if data.hour == "00" then lo studente non ha specificato un orario qundi restituisco tutti i corsi di quel giorno altrimenti solamente l'orario specificato   
-    try:
-        orario_inizio = data.strftime("%H:%M")
-        if(data.strftime("%H") == "00"):
-            sql = "SELECT corso from lezioni WHERE orario_inizio >= %s AND data = %s ORDER BY orario_inizio"
-        else:
-            sql = "SELECT corso from lezioni WHERE orario_inizio = %s AND data = %s ORDER BY orario_inizio"    
-        s.execute(sql, (orario_inizio, data.strftime("%Y-%m-%d"), ))
-        res = s.fetchall()  
-        if(len(res) > 0):
-            if(data.strftime("%H") == "00"):
-                response = text_day+ " hai lezione di: "
-                for i in range (0, len(res)):
-                    response += res[i][0]+" "
+    #if data.hour == "00" then lo studente non ha specificato un orario qundi restituisco tutti i corsi di quel giorno altrimenti solamente l'orario specificato
+    if("settimana" in text_day):
+        sql = "SELECT corso, data from lezioni WHERE data >= %s AND data <= %s ORDER BY data, orario_inizio"
+        try:
+            end_data = data + timedelta(days = 7)            
+            s.execute(sql, (data.strftime("%Y-%m-%d"), end_data.strftime("%Y-%m-%d")))
+            res = s.fetchall()
+            if(len(res) > 0):
+                day_week = " il "+str(res[0][1])+" di: "
+                response = text_day+" hai lezione "+day_week
+                for i in range(0, len(res)):
+                    if(i != 0 and res[i][1] != res[i-1][1]):
+                        response += " il "+str(res[i][1])+" di: "
+                    response += " "+str(res[i][0])+", "
+                #response = text_day+ " hai lezione di "+res[i][0]+" il: "
+                #for i in range (0, len(res)):
+                #    response += str(res[i][2])+" alle "+str(res[i][1])+" "          
             else:
-                response = text_day + " hai lezione di: " + res[0][0]
-            return response          
-        else:
-            return "Non ci sono lezioni"   
-    except:
-        return "Errore connessione"
+                response = "Non ci sono lezioni"
+            return response       
+        except:
+            return "Errore connessione"
+    else:               
+        try:
+            orario_inizio = data.strftime("%H:%M")
+            if(data.strftime("%H") == "00"):
+                sql = "SELECT corso from lezioni WHERE orario_inizio >= %s AND data = %s ORDER BY orario_inizio"
+                s.execute(sql, (orario_inizio, data.strftime("%Y-%m-%d"), ))
+            else:
+                sql = "SELECT corso from lezioni WHERE orario_inizio <= %s AND orario_fine > %s AND data = %s ORDER BY orario_inizio"    
+                s.execute(sql, (orario_inizio, orario_inizio, data.strftime("%Y-%m-%d"),))
+            res = s.fetchall()  
+            if(len(res) > 0):
+                if(data.strftime("%H") == "00"):
+                    response = text_day+ " hai lezione di: "
+                    for i in range (0, len(res)):
+                        response += res[i][0]+" "
+                else:
+                    response = text_day + " hai lezione di: " + res[0][0]
+                return response          
+            else:
+                return "Non ci sono lezioni"   
+        except:
+            return "Errore connessione"
 
 
 def intent_get_orario(entities):
@@ -114,7 +144,7 @@ def intent_get_orario(entities):
                 if(len(res) > 0):
                     response = text_day+ " hai lezione di "+res[i][0]+" il: "
                     for i in range (0, len(res)):
-                        response += str(res[i][2])+" alle "+str(res[i][1])+" "          
+                        response += str(res[i][2])+" alle "+str(res[i][1])+", "          
                 else:
                     response = "Non ci sono lezioni"
                 return response       
@@ -122,7 +152,7 @@ def intent_get_orario(entities):
                 return "Errore connessione"
         else:        
             corso = "'" + entities["corso:corso"][0]["value"] +"'"
-            sql = "SELECT  corso, orario_inizio from lezioni WHERE data = %s AND corso REGEXP "+corso+" ORDER BY orario_inizio"  
+            sql = "SELECT  corso, orario_inizio, orario_fine from lezioni WHERE data = %s AND corso REGEXP "+corso+" ORDER BY orario_inizio"  
             #stampo i risulati della query          
             try:
                 s.execute(sql, (data.strftime("%Y-%m-%d")))
@@ -130,7 +160,7 @@ def intent_get_orario(entities):
                 if(len(res) > 0):
                     response = text_day+ " hai lezione di: "
                     for i in range (0, len(res)):
-                        response += res[i][0]+" alle "+str(res[i][1])+" "          
+                        response += res[i][0]+" dalle "+str(res[i][1])+" alle "+str(res[i][2])          
                 else:
                     response = "Non ci sono lezioni"
                 return response       

@@ -28,10 +28,11 @@ def webhook():
     try:
         user_request = data["entry"][0]["messaging"][0]["message"]["text"]
         response_raw = db_response(user_request)
-        response = response_raw[:1].upper() + response_raw[1:]
+        response = "%s%s" % (response_raw[0].upper(), response_raw[1:])
+        print("ddddddddddddd" + response_raw)
     except:
         response = "Non ho capito"
-    fb.send_text_message(id_sender, response)
+    #fb.send_text_message(id_sender, response)
     return "ok", 200
 
 def log(message):
