@@ -10,6 +10,7 @@ def wit_response(message_text):
     entities = None
     confidence = None
     resp = client.message(message_text)
+    print(resp)
     try:
         intent = resp["intents"][0]["name"]
         confidence = resp["intents"][0]["confidence"]

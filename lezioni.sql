@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Creato il: Lug 30, 2020 alle 14:20
+-- Creato il: Ago 05, 2020 alle 17:39
 -- Versione del server: 10.4.11-MariaDB
 -- Versione PHP: 7.2.30
 
@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `lezioni` (
   `corso` varchar(100) NOT NULL,
-  `data` date NOT NULL,
+  `giorno` set('Lunedi','Martedi','Mercoledi','Giovedi','Venerdi','Sabato','Domenica') NOT NULL,
   `orario_inizio` time NOT NULL,
   `orario_fine` time NOT NULL,
   `aula` varchar(100) NOT NULL
@@ -39,12 +39,19 @@ CREATE TABLE `lezioni` (
 -- Dump dei dati per la tabella `lezioni`
 --
 
-INSERT INTO `lezioni` (`corso`, `data`, `orario_inizio`, `orario_fine`, `aula`) VALUES
-('Algoritmi', '2020-07-29', '19:00:00', '18:00:00', 'A2'),
-('Algoritmi', '2020-07-31', '11:00:00', '13:00:00', 'C2'),
-('Programmazione I', '2020-07-31', '09:00:00', '10:00:00', 'A'),
-('Programmazione I', '2020-07-31', '10:00:00', '11:00:00', 'B'),
-('Programmazione II', '2020-07-29', '20:00:00', '21:00:00', 'C1');
+INSERT INTO `lezioni` (`corso`, `giorno`, `orario_inizio`, `orario_fine`, `aula`) VALUES
+('Algoritmi e Strutture Dati', 'Lunedi', '09:00:00', '13:00:00', 'A2'),
+('Algoritmi e Strutture Dati', 'Lunedi', '20:00:00', '21:00:00', 'B6'),
+('Algoritmi e Strutture Dati', 'Giovedi', '09:00:00', '13:00:00', 'C1'),
+('Analaisi Matematica', 'Venerdi', '10:00:00', '12:00:00', 'A2'),
+('Analisi Matematica', 'Martedi', '09:00:00', '11:00:00', 'A4'),
+('Matematica Discreta', 'Martedi', '11:00:00', '13:00:00', 'B1'),
+('Matematica Discreta', 'Giovedi', '13:00:00', '14:00:00', 'A3'),
+('Programmazione 1', 'Lunedi', '13:00:00', '15:00:00', 'A1'),
+('Programmazione 1', 'Mercoledi', '09:00:00', '12:00:00', 'A1'),
+('Programmazione 1', 'Venerdi', '09:00:00', '10:00:00', 'A1'),
+('Programmazione 2', 'Lunedi', '15:00:00', '17:00:00', 'A3'),
+('Programmazione 2', 'Mercoledi', '12:00:00', '14:00:00', 'B3');
 
 --
 -- Indici per le tabelle scaricate
@@ -54,7 +61,7 @@ INSERT INTO `lezioni` (`corso`, `data`, `orario_inizio`, `orario_fine`, `aula`) 
 -- Indici per le tabelle `lezioni`
 --
 ALTER TABLE `lezioni`
-  ADD PRIMARY KEY (`corso`,`data`,`orario_inizio`,`orario_fine`);
+  ADD PRIMARY KEY (`corso`,`giorno`,`orario_inizio`,`orario_fine`,`aula`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
